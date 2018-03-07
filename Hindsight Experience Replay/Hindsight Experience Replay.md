@@ -41,7 +41,7 @@ her的局限，比如这边的假设实在是有点多，特别是goal这一块�
 所以既然感觉有点浪费，就会想要利用起来，这部分也就是HER做的事情：如果我们能够知道r(s, a, g)的话，那么对于上面采样出来的$\tau$中的$(s, a, r(a, s, g), s', g)$，我们可以选择不同的goal，让这里面的reward变成1，就是意味着：这个transition tuples能够有效地帮助这个goal进行学习。那么replay buffer中reward为1的transition tuples数目就得到了一定的提升，可能就能够有效地帮助agent学习。
 
 下面是HER的算法，简单地解释一下就是：利用当前policy在环境中交互获得trajectory $\tau$，然后将$(s, a, r(a, s, g), s', g)$存储在replay buffer中，然后再挑选一些其他的goal对这个trajectory $\tau$中的g和r做修改，然后存储在replay buffer中，之后就是普通的基于replay buffer算法中常见的从buffer中sample，然后训练等过程中。
-![屏幕快照 2018-03-07 下午1.29.41](media/15203928365738/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-03-07%20%E4%B8%8B%E5%8D%881.29.41.png)
+![](https://raw.githubusercontent.com/wwxFromTju/RL-paper/master/Hindsight%20Experience%20Replay/media/1.png)
 
 那么关于如果挑选其他的goal就是一项很玄学的地方了，在论文里面提出了几种不同的方法：
 * final — goal corresponding to the final state in each episode
@@ -52,7 +52,7 @@ her的局限，比如这边的假设实在是有点多，特别是goal这一块�
 
 # 实验
 ## 实验环境
-![屏幕快照 2018-03-07 下午1.35.44](media/15203928365738/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-03-07%20%E4%B8%8B%E5%8D%881.35.44.png)
+![](https://raw.githubusercontent.com/wwxFromTju/RL-paper/master/Hindsight%20Experience%20Replay/media/2.png)
 这里有三种任务：
 
 1. Pushing. 把物体推到指定的位置2. Sliding. 推动物体，使它滑动到某个位置3. Pick-and-place. 拿起物体，移动到空中的某个位置
@@ -63,22 +63,22 @@ her的局限，比如这边的假设实在是有点多，特别是goal这一块�
 * Observations：gripper（机器手）在这个空间中的绝对位置，需要推动物体object和goal相对gripper的相对位置
 
 ## Does HER improve performance?
-![屏幕快照 2018-03-07 下午1.43.28](media/15203928365738/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-03-07%20%E4%B8%8B%E5%8D%881.43.28.png)
+![](https://raw.githubusercontent.com/wwxFromTju/RL-paper/master/Hindsight%20Experience%20Replay/media/3.png)
 比较一下，有没有HER对于不同任务的学习效果，同时加入一些探索的方法做比对，看看是不是探索太少了。结论就是：HER能够有效的学习。
 
 ## Does HER improve performance even if there is only one goal we care about?
-![屏幕快照 2018-03-07 下午1.45.57](media/15203928365738/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-03-07%20%E4%B8%8B%E5%8D%881.45.57.png)
+![](https://raw.githubusercontent.com/wwxFromTju/RL-paper/master/Hindsight%20Experience%20Replay/media/4.png)
 其实就是固定每个episode要完成的goal相同goal，而不是在空间中随机生成goal。这里的实验效果是有效的，可能看上去很奇怪，但是如果你有仔细观察Observations中，goal等是用相对位置表示的，所以虽然用HER生成的goal不同，但是如果相对位置表示相同时，所需要做的action是相同的，所以是能够有帮助学习的（实验环境的设置关系很大！！！！）
 
 ## How does HER interact with reward shaping?
-![屏幕快照 2018-03-07 下午1.50.05](media/15203928365738/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-03-07%20%E4%B8%8B%E5%8D%881.50.05.png)
+![](https://raw.githubusercontent.com/wwxFromTju/RL-paper/master/Hindsight%20Experience%20Replay/media/5.png)
 这部分，我感觉就是真没有好好调reward function，但是毕竟别人想要体现的是稀疏reward
 
 ## How many goals should we replay each trajectory with and how to choose them?
-![屏幕快照 2018-03-07 下午1.56.59](media/15203928365738/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-03-07%20%E4%B8%8B%E5%8D%881.56.59.png)
+![](https://raw.githubusercontent.com/wwxFromTju/RL-paper/master/Hindsight%20Experience%20Replay/media/6.png)
 这里就是上面提到生成goal中的k的选择
 
 ## Deployment on a physical robot
-![屏幕快照 2018-03-07 下午1.57.37](media/15203928365738/%E5%B1%8F%E5%B9%95%E5%BF%AB%E7%85%A7%202018-03-07%20%E4%B8%8B%E5%8D%881.57.37.png)
+![](https://raw.githubusercontent.com/wwxFromTju/RL-paper/master/Hindsight%20Experience%20Replay/media/7.png)
 测试了一下，直接部署在真正的robot上，Initially the policy succeeded in 2 out of 5 trials. It was not robust to small errors in the box position estimation because it was trained on perfect state coming from the simulation. After retraining the policy with gaussian noise (std=1cm) added to observations8 the success rate increased to 5/5. 
 
